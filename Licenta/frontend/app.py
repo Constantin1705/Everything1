@@ -19,9 +19,18 @@ def setup_database(conn):
     try:
         c = conn.cursor()
         c.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                username text PRIMARY KEY,
-                password text NOT NULL
+            CREATE TABLE IF NOT EXISTS experiments (
+                user_id INTEGER PRIMARY KEY,
+                username TEXT,
+                password TEXT,
+                experiment_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                eps NUMERIC,
+                original_image TEXT,
+                mask TEXT,
+                original_image_prediction NUMERIC,
+                original_image_mask_prediction NUMERIC,
+                real_label NUMERIC
             );
         ''')
         conn.commit()
@@ -58,7 +67,7 @@ def sign_out():
     st.session_state['logged_in'] = False
     st.session_state['username'] = ''
     st.session_state['current_page'] = None
-    st.experimental_rerun()
+    st.rerun()
 
 def create_header():
     col1, col2 = st.columns([8, 2])
@@ -77,7 +86,7 @@ def test_page():
     with col1:
         if st.button("New"):
             st.session_state['current_page'] = 'new_experiment'
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         if st.button("Download"):
             st.write("Download Started!")  # Placeholder action
@@ -86,29 +95,55 @@ def test_page():
     st.write("Experiments Table (Old Trials)")
     st.table(df)
 
+def run_experiment(data, model):
+    # Implement your experiment logic here
+    st.write("Experiment running...")
+    # Example: Complete processing
+    st.write("Experiment complete!")
+
 # New Experiment page function
 def new_experiment_page():
     create_header()
     st.write("New Experiment Page")
     
         
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("Load Data"):
-            st.write("Data loaded!")  # Placeholder for data loading
-    with col2:
-        if st.button("Load Model"):
-            st.write("Model loaded!")  # Placeholder for model loading
-    with col3:
-        if st.button("Run"):
-            st.write("Experiment running...")  # Placeholder for experiment run
     
+    # Column for loading data
+ 
+    
+    data_file = st.file_uploader("Choose a data file", key="data_loader")
+    if data_file is not None:
+        st.success("Data loaded successfully!")
+
+    # Column for loading model
+   
+        
+    model_file = st.file_uploader("Choose a model file", key="model_loader")
+    if model_file is not None:
+        st.success("Model loaded successfully!")
+
+    # Column for running the experiment
+    #Model 2gb
+    if st.button("Run"):
+        if 'data_file' in st.session_state and 'model_file' in st.session_state:
+            run_experiment(st.session_state['data_file'], st.session_state['model_file'])
+        else:
+            st.error("Please load both data and model files before running.")
+    st.text_input("Choose your gradient")
     # Displaying the experiment results table
     st.write("Experiment Results Table")
-    st.table(df)  # Placeholder for displaying experiment results
+    data = {
+    'original_image_url': [1, 2, 3],
+    'mask_image_url': [101, 102, 103],
+    'original_class': [0.01, 0.02, 0.03],
+    'original_predicted_class': ['/path/to/image1.jpg', '/path/to/image2.jpg', '/path/to/image3.jpg'],
+    'masked_image_predicted class': ['/path/to/mask1.jpg', '/path/to/mask2.jpg', '/path/to/mask3.jpg'],
+    }
+    df1 = pd.DataFrame(data)
+    st.table(df1)  # Placeholder for displaying experiment results
     if st.button("Back to Test Page"):
         st.session_state['current_page'] = 'test_page'
-        st.experimental_rerun()
+        st.rerun()
 
 # Initialize database connection
 conn = create_connection('auth.db')
@@ -141,7 +176,7 @@ else:
             if authenticate_user(conn, username, password):
                 login_user(username)
                 st.session_state['current_page'] = 'main'
-                st.experimental_rerun()
+                st.rerun()
 
     with tab2:
         st.header("Sign Up")
