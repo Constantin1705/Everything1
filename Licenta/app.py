@@ -1,3 +1,4 @@
+from io import StringIO
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -77,6 +78,22 @@ def create_header():
         if st.button("Sign Out"):
             sign_out()
 
+data = {
+    'Experiment ID': [1, 2, 3],
+    'Description': ['Trial 1', 'Trial 2', 'Trial 3'],
+    'Result': ['Success', 'Failure', 'Success']
+}
+df1 = pd.DataFrame(data)
+
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    csv =df.to_csv(index=False).encode("utf-8")
+    
+    return StringIO(csv)
+
+csv = convert_df(df1)
+
 # Test page function
 def test_page():
     create_header()
@@ -88,8 +105,12 @@ def test_page():
             st.session_state['current_page'] = 'new_experiment'
             st.rerun()
     with col2:
-        if st.button("Download"):
-            st.write("Download Started!")  # Placeholder action
+        st.download_button(
+    label="Download data as CSV",
+    data=csv.getvalue(),
+    file_name="large_df.csv",
+    mime="text/csv",
+    )
     
     # Displaying the experiments table
     st.write("Experiments Table (Old Trials)")
@@ -185,3 +206,4 @@ else:
         if st.button('Sign Up'):
             result = sign_up_user(conn, new_username, new_password)
             st.success(result)
+
