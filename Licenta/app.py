@@ -79,20 +79,21 @@ def create_header():
             sign_out()
 
 data = {
-    'Experiment ID': [1, 2, 3],
-    'Description': ['Trial 1', 'Trial 2', 'Trial 3'],
-    'Result': ['Success', 'Failure', 'Success']
+    "Experiment Name": ["Experiment 1", "Experiment 2"],
+    "Experiment Description": ["Testing model A", "Testing model B"],
+    "Status": ["Success", "Failure"],
+    "Experiment Config": ["{'lr': 0.01, 'eps': 0.1}", "{'lr': 0.02, 'eps': 0.2}"],
+    "Original Model Accuracy": [0.95, 0.90],
+    "Model Accuracy on Adversarial Examples": [0.85, 0.70],
+    "Number of Changed Predictions": ["50/1000", "300/1000"]
 }
+
+def convert_df_to_csv(df):
+    return df.to_csv(index=False).encode('utf-8')
+
 df1 = pd.DataFrame(data)
+csv = convert_df_to_csv(df1)
 
-@st.cache_data
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    csv =df.to_csv(index=False).encode("utf-8")
-    
-    return StringIO(csv)
-
-csv = convert_df(df1)
 
 # Test page function
 def test_page():
@@ -107,14 +108,14 @@ def test_page():
     with col2:
         st.download_button(
     label="Download data as CSV",
-    data=csv.getvalue(),
+    data=csv,
     file_name="large_df.csv",
     mime="text/csv",
     )
     
     # Displaying the experiments table
     st.write("Experiments Table (Old Trials)")
-    st.table(df)
+    st.table(df1)
 
 def run_experiment(data, model):
     # Implement your experiment logic here
@@ -123,49 +124,242 @@ def run_experiment(data, model):
     st.write("Experiment complete!")
 
 # New Experiment page function
+# def new_experiment_page():
+#     create_header()
+#     st.write("New Experiment Page")
+    
+        
+    
+#     # Column for loading data
+ 
+    
+#     data_file = st.file_uploader("Choose a data file", key="data_loader")
+#     if data_file is not None:
+#         st.success("Data loaded successfully!")
+
+#     # Column for loading model
+   
+        
+#     model_file = st.file_uploader("Choose a model file", key="model_loader")
+#     if model_file is not None:
+#         st.success("Model loaded successfully!")
+
+#     # Column for running the experiment
+#     #Model 2gb
+#     if st.button("Run"):
+#         if 'data_file' in st.session_state and 'model_file' in st.session_state:
+#             run_experiment(st.session_state['data_file'], st.session_state['model_file'])
+#         else:
+#             st.error("Please load both data and model files before running.")
+#     st.text_input("Choose your gradient")
+#     # Displaying the experiment results table
+#     st.write("Experiment Results Table")
+#     data = {
+#     'original_image_url': [1, 2, 3],
+#     'mask_image_url': [101, 102, 103],
+#     'original_class': [0.01, 0.02, 0.03],
+#     'original_predicted_class': ['/path/to/image1.jpg', '/path/to/image2.jpg', '/path/to/image3.jpg'],
+#     'masked_image_predicted class': ['/path/to/mask1.jpg', '/path/to/mask2.jpg', '/path/to/mask3.jpg'],
+#     }
+#     df1 = pd.DataFrame(data)
+#     st.table(df1)  # Placeholder for displaying experiment results
+#     if st.button("Back to Test Page"):
+#         st.session_state['current_page'] = 'test_page'
+#         st.rerun()
+
+# # 
+# import streamlit as st
+# import pandas as pd
+# import torch
+# from io import BytesIO
+# import torchvision.transforms as transforms
+# from PIL import Image
+# import numpy as np
+
+# def create_header():
+#     st.write("Welcome to the Model Testing Page")
+
+# def load_model(model_file):
+#     # Assuming the model file is a TorchScript model
+#     buffer = BytesIO(model_file.getvalue())
+#     model = torch.jit.load(buffer)
+#     model.eval()
+#     return model
+
+# def run_experiment(model, data_file):
+#     # Load data - assuming data_file is images in a single compressed file (like ZIP)
+#     images, labels = load_images_from_data(data_file)
+    
+#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#     model.to(device)
+
+#     transform = transforms.Compose([
+#         transforms.Resize((32, 32)),
+#         transforms.ToTensor(),
+#         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+#     ])
+    
+#     correct = 0
+#     total = 0
+#     with torch.no_grad():
+#         for img, label in zip(images, labels):
+#             img = transform(img).unsqueeze(0).to(device)  # Add batch dimension and move to device
+#             label = torch.tensor([label]).to(device)  # Move label to device
+#             output = model(img)
+#             _, predicted = torch.max(output, 1)
+#             total += 1
+#             correct += (predicted == label).item()
+    
+#     accuracy = 100 * correct / total
+#     return pd.DataFrame({"Accuracy": [accuracy]})
+
+# def load_images_from_data(data_file):
+#     import zipfile
+#     from io import BytesIO
+#     import torchvision.transforms.functional as TF
+
+#     z = zipfile.ZipFile(data_file)
+#     images = []
+#     labels = []  # Assuming some way to get labels from file names or an included file
+
+#     for filename in z.namelist():
+#         with z.open(filename) as file:
+#             img = Image.open(file).convert("RGB")
+#             images.append(img)
+#             # Mock label extraction from filename
+#             label = int(filename.split('_')[0])  # Assuming labels are prefixed in file names
+#             labels.append(label)
+
+#     return images, labels
+
+# def new_experiment_page():
+#     create_header()
+#     st.write("New Experiment Page")
+
+#     data_file = st.file_uploader("Choose a data file", type=["zip"], key="data_loader")
+#     if data_file is not None:
+#         st.session_state['data_file'] = data_file
+#         st.success("Data loaded successfully!")
+
+#     model_file = st.file_uploader("Choose a model file", type=["pt", "pth"], key="model_loader")
+#     if model_file is not None:
+#         st.session_state['model_file'] = model_file
+#         st.success("Model loaded successfully!")
+
+#     if st.button("Run Experiment"):
+#         if 'data_file' in st.session_state and 'model_file' in st.session_state:
+#             model = load_model(st.session_state['model_file'])
+#             results = run_experiment(model, st.session_state['data_file'])
+#             st.session_state['results'] = results
+#             st.success("Experiment run successfully!")
+#         else:
+#             st.error("Please load both data and model files before running.")
+
+#     if 'results' in st.session_state:
+#         st.write("Experiment Results Table")
+#         st.table(st.session_state['results'])
+
+#     if st.button("Back to Test Page"):
+#         st.session_state['current_page'] = 'test_page'
+#         st.experimental_rerun()
+
+# ####
+import streamlit as st
+import pandas as pd
+import torch
+from io import BytesIO
+import torchvision.transforms as transforms
+from PIL import Image
+import zipfile
+import numpy as np
+
+def create_header():
+    st.write("Welcome to the Model Testing Page")
+
+def load_model(model_file):
+    # Assuming the model file is a TorchScript model
+    buffer = BytesIO(model_file.getvalue())
+    model = torch.jit.load(buffer)
+    model.eval()
+    return model
+
+def run_experiment(model, data_file):
+    # Load data - assuming data_file is images in a single compressed file (like ZIP)
+    images, labels = load_images_from_data(data_file)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+    transform = transforms.Compose([
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for img, label in zip(images, labels):
+            img = transform(img).unsqueeze(0).to(device)  # Add batch dimension and move to device
+            label = torch.tensor([label]).to(device)  # Move label to device
+            output = model(img)
+            _, predicted = torch.max(output, 1)
+            total += 1
+            correct += (predicted == label).item()
+            # Debugging output
+            st.write(f"Label: {label.item()}, Predicted: {predicted.item()}")
+    
+    accuracy = 100 * correct / total
+    return pd.DataFrame({"Accuracy": [accuracy]})
+
+def load_images_from_data(data_file):
+    z = zipfile.ZipFile(data_file)
+    images = []
+    labels = []  # Assuming some way to get labels from file names or an included file
+
+    for filename in z.namelist():
+        if filename.endswith('.png') or filename.endswith('.jpg'):
+            with z.open(filename) as file:
+                img = Image.open(file).convert("RGB")
+                images.append(img)
+                # Log the filename and extracted label for debugging
+                label = int(filename.split('_')[0])  # Assuming labels are prefixed in file names
+                labels.append(label)
+                st.write("Filename:", filename, "Label:", label)  # Debugging output
+
+    return images, labels
+
 def new_experiment_page():
     create_header()
     st.write("New Experiment Page")
-    
-        
-    
-    # Column for loading data
- 
-    
-    data_file = st.file_uploader("Choose a data file", key="data_loader")
+
+    data_file = st.file_uploader("Choose a data file (ZIP with images)", type=["zip"], key="data_loader")
     if data_file is not None:
+        st.session_state['data_file'] = data_file
         st.success("Data loaded successfully!")
 
-    # Column for loading model
-   
-        
-    model_file = st.file_uploader("Choose a model file", key="model_loader")
+    model_file = st.file_uploader("Choose a model file (TorchScript .pt or .pth)", type=["pt", "pth"], key="model_loader")
     if model_file is not None:
+        st.session_state['model_file'] = model_file
         st.success("Model loaded successfully!")
 
-    # Column for running the experiment
-    #Model 2gb
-    if st.button("Run"):
+    if st.button("Run Experiment"):
         if 'data_file' in st.session_state and 'model_file' in st.session_state:
-            run_experiment(st.session_state['data_file'], st.session_state['model_file'])
+            model = load_model(st.session_state['model_file'])
+            results = run_experiment(model, st.session_state['data_file'])
+            st.session_state['results'] = results
+            st.success("Experiment run successfully!")
         else:
             st.error("Please load both data and model files before running.")
-    st.text_input("Choose your gradient")
-    # Displaying the experiment results table
-    st.write("Experiment Results Table")
-    data = {
-    'original_image_url': [1, 2, 3],
-    'mask_image_url': [101, 102, 103],
-    'original_class': [0.01, 0.02, 0.03],
-    'original_predicted_class': ['/path/to/image1.jpg', '/path/to/image2.jpg', '/path/to/image3.jpg'],
-    'masked_image_predicted class': ['/path/to/mask1.jpg', '/path/to/mask2.jpg', '/path/to/mask3.jpg'],
-    }
-    df1 = pd.DataFrame(data)
-    st.table(df1)  # Placeholder for displaying experiment results
+
+    if 'results' in st.session_state:
+        st.write("Experiment Results Table")
+        st.table(st.session_state['results'])
+
     if st.button("Back to Test Page"):
         st.session_state['current_page'] = 'test_page'
-        st.rerun()
-
+        st.experimental_rerun()
+# 
 # Initialize database connection
 conn = create_connection('auth.db')
 setup_database(conn)
